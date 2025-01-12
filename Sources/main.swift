@@ -22,11 +22,20 @@ class Interpreter {
 
     func run(program: String) {
         let scanner = Scanner(source: program)
-        let tokens = scanner.scanTokens()
+        do {
+            let tokens = try scanner.scanTokens()
 
-        for token in tokens {
-            print(token)
+            for token in tokens {
+                print(token)
+            }
         }
+        catch let LoxError.ScannerError(line: line, pos: _, message: message) {
+            error(at: line, about: message)
+        }
+        catch {
+            print("Unrecognized error \(error)")
+        }
+
     }
 
 
@@ -34,7 +43,6 @@ class Interpreter {
         do {
             let contents = try String(contentsOfFile: path, encoding: String.Encoding.utf8)
             run(program: contents)
-            if hadError { exit(65) } 
         }
         catch {
             print("File '\(path)' cannot be read: \(error)")
