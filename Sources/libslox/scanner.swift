@@ -68,8 +68,6 @@ public class Scanner {
 
     // These variables are used for error reporting
     // and map to an intutive idea of a character 
-    var start: Int = 0 
-    var current: Int = 0 
     var line: Int = 1 
     var linePos: Int = 1
 
@@ -78,17 +76,24 @@ public class Scanner {
     var idx: String.Index
     var startIdx: String.Index
     var endIdx: String.Index
+    var done = false
 
     public init(source input: String) {
         source = input
         idx = input.startIndex
         startIdx = idx
-        endIdx = source.index(before: input.endIndex)
-        print(endIdx)
+
+        // Handle empty strings
+        if input.startIndex == input.endIndex {
+            done = true
+            endIdx = startIdx
+        } else {
+            endIdx = source.index(before: input.endIndex)
+        }
     }
 
-    func isAtEnd() -> Bool {
-        return idx > endIdx
+    func canReadMore() -> Bool {
+        return idx < endIdx
     }
 
     func foundChar(c: Character) -> Bool {
@@ -99,25 +104,31 @@ public class Scanner {
         }
     }
 
-
+    // We want it so that calling advance repeatedly will return every character 
+    // in the string 
     func advance() -> Character? {
-        if !isAtEnd() {
-            let nextChar = source[idx]
-            idx = source.index(after: idx)
+        if done {
+            return Optional.none
+        }
 
-            current += 1 
+        let nextChar = source[idx]
+
+        if canReadMore() {
+            idx = source.index(after: idx)
             linePos += 1 
-            if nextChar == "\n" {
+            if source[idx] == "\n" {
                 line += 1
                 linePos = 0
             }
-            return nextChar
+        } else {
+            done = true
         }
-        return Optional.none
+
+        return nextChar
     }
 
     func peek() -> Character? {
-        if idx < endIdx {
+        if canReadMore() {
             let next_idx = source.index(after: idx)
             return source[next_idx]
         } else {
@@ -151,9 +162,10 @@ public class Scanner {
     func scanString() throws {
         scanUntil(a: "\"") 
         
-        if isAtEnd() {
+        if !canReadMore() {
             throw LoxError.ScannerError(line: line, pos: linePos, message: "Unterminated string")
         }
+        
 
         // Closing " 
         let _ = advance()
@@ -167,8 +179,7 @@ public class Scanner {
 
 
 
-    func scanToken(char: Character) throws {
-        print("Scan TOken")
+    func scanToken() throws {
         let char = advance()!
         switch char {
 
@@ -233,10 +244,8 @@ public class Scanner {
     }
 
     public func scanTokens() throws -> Array<Token> {
-        while let char = advance()  {
-            start = current 
-            startIdx = idx
-            try scanToken(char: char)
+        while !done {
+            try scanToken()
         }
 
         tokens.append(Token(type: TokenType.EOF, lexeme: "", line: line))
