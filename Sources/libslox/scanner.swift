@@ -106,12 +106,10 @@ public class Scanner {
 
     // We want it so that calling advance repeatedly will return every character 
     // in the string 
-    func advance() -> Character? {
+    func advance() -> Bool? {
         if done {
-            return Optional.none
+            return false
         }
-
-        let nextChar = source[idx]
 
         if canReadMore() {
             idx = source.index(after: idx)
@@ -124,26 +122,23 @@ public class Scanner {
             done = true
         }
 
-        return nextChar
+        return true
     }
 
     func peek() -> Character? {
-        if !done {
-            return source[idx]
+        if canReadMore() {
+            return source[source.index(after: idx)]
         } else {
             return Optional.none
         }
     }
 
     func match(with expected: Character) -> Bool {
-        print("MATCH")
-        print(String(describing: peek()))
         let isMatch = peek().map { nextChar in nextChar == expected } ?? false
 
         if isMatch {
             let _ = advance()
         }
-        print(isMatch)
 
         return isMatch
     }
@@ -170,10 +165,6 @@ public class Scanner {
             throw LoxError.ScannerError(line: line, pos: linePos, message: "Unterminated string")
         }
         
-
-        // Closing " 
-        let _ = advance()
-
         let strStart = source.index(after: startIdx) 
         let strEnd = source.index(before: idx) 
         let litString = source[strStart...strEnd]
@@ -182,8 +173,7 @@ public class Scanner {
 
 
     func scanToken() throws {
-        let char = advance()!
-        print("SCAN TOKEN \(char)")
+        let char = source[idx]
         switch char {
 
             // Single charter tokens 
@@ -250,6 +240,7 @@ public class Scanner {
         while !done {
             startIdx = idx
             try scanToken()
+            let _ = advance()
         }
 
         tokens.append(Token(type: TokenType.EOF, lexeme: "", line: line))

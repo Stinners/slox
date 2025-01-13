@@ -42,13 +42,33 @@ final class ScannerTest: XCTestCase {
     }
 
     func testCanScanDoubleCharacters() throws {
-        let scanner = Scanner(source: "!=")
+        let scanner = Scanner(source: "!= == /")
         let tokens = try scanner.scanTokens()
         
         checkTokens(tokens: tokens, are: [
             (type: .BANG_EQUAL, lex: "!="),
-            //(type: .EQUAL_EQUAL, lex: "=="),
-            //(type: .SLASH, lex: "/"),
+            (type: .EQUAL_EQUAL, lex: "=="),
+            (type: .SLASH, lex: "/"),
+        ])
+    }
+
+    func testHandlesComments() throws {
+        let scanner = Scanner(source: "+ //some comment\n +")
+        let tokens = try scanner.scanTokens()
+        
+        checkTokens(tokens: tokens, are: [
+            (type: .PLUS, lex: "+"),
+            (type: .PLUS, lex: "+"),
+        ])
+    }
+
+    func testHandlesNewlines() throws {
+        let scanner = Scanner(source: "+ \n +")
+        let tokens = try scanner.scanTokens()
+        
+        checkTokens(tokens: tokens, are: [
+            (type: .PLUS, lex: "+"),
+            (type: .PLUS, lex: "+"),
         ])
     }
 }
