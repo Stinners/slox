@@ -57,7 +57,7 @@ public struct Token: CustomStringConvertible {
     public var line: Int
     
     public var description: String {
-        return "\(type) \(lexeme)"
+        return "[\(type) '\(lexeme)']"
     }
 }
 
@@ -128,25 +128,29 @@ public class Scanner {
     }
 
     func peek() -> Character? {
-        if canReadMore() {
-            let next_idx = source.index(after: idx)
-            return source[next_idx]
+        if !done {
+            return source[idx]
         } else {
             return Optional.none
         }
     }
 
     func match(with expected: Character) -> Bool {
+        print("MATCH")
+        print(String(describing: peek()))
         let isMatch = peek().map { nextChar in nextChar == expected } ?? false
 
         if isMatch {
             let _ = advance()
         }
+        print(isMatch)
 
         return isMatch
     }
 
 
+    // Scanning should end with the index on the last char 
+    // of the current token
     func addToken(_ type: TokenType) {
         let text = source[startIdx...idx]
         let token = Token(type: type, lexeme: text, line: line)
@@ -174,13 +178,12 @@ public class Scanner {
         let strEnd = source.index(before: idx) 
         let litString = source[strStart...strEnd]
         addToken(TokenType.STRING(litString))
-            
     }
-
 
 
     func scanToken() throws {
         let char = advance()!
+        print("SCAN TOKEN \(char)")
         switch char {
 
             // Single charter tokens 
@@ -245,6 +248,7 @@ public class Scanner {
 
     public func scanTokens() throws -> Array<Token> {
         while !done {
+            startIdx = idx
             try scanToken()
         }
 
