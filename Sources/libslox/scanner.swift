@@ -1,5 +1,7 @@
+import Foundation
 
-enum TokenType {
+
+public enum TokenType: Equatable {
   // Single-character tokens.
   case LEFT_PAREN
   case RIGHT_PAREN
@@ -49,18 +51,18 @@ enum TokenType {
   case EOF
 }
 
-struct Token: CustomStringConvertible {
-    var type: TokenType
-    var lexeme: Substring
-    var line: Int
+public struct Token: CustomStringConvertible {
+    public var type: TokenType
+    public var lexeme: Substring
+    public var line: Int
     
-    var description: String {
+    public var description: String {
         return "\(type) \(lexeme)"
     }
 }
 
 
-class Scanner {
+public class Scanner {
     var source: String
     var tokens: Array<Token> = []
 
@@ -77,15 +79,16 @@ class Scanner {
     var startIdx: String.Index
     var endIdx: String.Index
 
-    init(source input: String) {
+    public init(source input: String) {
         source = input
         idx = input.startIndex
         startIdx = idx
-        endIdx = input.endIndex
+        endIdx = source.index(before: input.endIndex)
+        print(endIdx)
     }
 
     func isAtEnd() -> Bool {
-        return idx >= endIdx
+        return idx > endIdx
     }
 
     func foundChar(c: Character) -> Bool {
@@ -99,19 +102,18 @@ class Scanner {
 
     func advance() -> Character? {
         if !isAtEnd() {
-            idx = source.index(after: idx) 
-            let next = source[idx]
+            let nextChar = source[idx]
+            idx = source.index(after: idx)
 
             current += 1 
             linePos += 1 
-            if next == "\n" {
+            if nextChar == "\n" {
                 line += 1
-                linePos = 1 
+                linePos = 0
             }
-
-            return next
+            return nextChar
         }
-        return Optional.none 
+        return Optional.none
     }
 
     func peek() -> Character? {
@@ -165,7 +167,8 @@ class Scanner {
 
 
 
-    func scanToken() throws {
+    func scanToken(char: Character) throws {
+        print("Scan TOken")
         let char = advance()!
         switch char {
 
@@ -229,11 +232,11 @@ class Scanner {
         }
     }
 
-    func scanTokens() throws -> Array<Token> {
-        while !isAtEnd() {
+    public func scanTokens() throws -> Array<Token> {
+        while let char = advance()  {
             start = current 
             startIdx = idx
-            try scanToken()
+            try scanToken(char: char)
         }
 
         tokens.append(Token(type: TokenType.EOF, lexeme: "", line: line))

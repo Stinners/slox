@@ -1,0 +1,3 @@
+import libslox
+
+Interpreter().main()

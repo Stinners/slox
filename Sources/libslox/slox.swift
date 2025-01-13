@@ -3,11 +3,10 @@
 
 import Foundation
 
-
-
-
-class Interpreter {
+public class Interpreter {
     var hadError = false 
+
+    public init() {}
 
     func report(at line: Int, where: String, message: String) {
         print("[line \(line)] Error \(`where`): \(message)")
@@ -62,7 +61,7 @@ class Interpreter {
         }
     }
 
-    func main() {
+    public func main() {
         let nArgs = CommandLine.arguments.count
         print(CommandLine.arguments)
         if nArgs > 2 {
@@ -77,5 +76,3 @@ class Interpreter {
         }
     }
 }
-
-Interpreter().main()

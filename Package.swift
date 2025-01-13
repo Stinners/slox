@@ -5,10 +5,25 @@ import PackageDescription
 
 let package = Package(
     name: "slox",
+    products: [
+        .executable(name: "slox", targets: ["slox"]),
+        .library(name: "libslox", targets: ["libslox"])
+    ],
+    dependencies: [
+        .package(url:  "https://github.com/Quick/Nimble.git", from: "13.0.0"),
+    ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .executableTarget(
-            name: "slox"),
+            name: "slox",
+            dependencies: ["libslox"]
+        ),
+        .target(
+            name: "libslox",
+            dependencies: []
+        ),
+        .testTarget(
+            name: "UnitTests",
+            dependencies: ["libslox", "Nimble"]
+        )
     ]
 )
