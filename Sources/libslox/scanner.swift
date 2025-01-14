@@ -133,6 +133,17 @@ public class Scanner {
         }
     }
 
+    func peekNext() -> Character? {
+        if canReadMore() { 
+            let nextIdx = source.index(after: idx) 
+            if nextIdx < endIdx {
+                return source[source.index(after: nextIdx)]
+            }
+        }
+        return Optional.none
+    }
+
+
     func match(with expected: Character) -> Bool {
         let isMatch = peek().map { nextChar in nextChar == expected } ?? false
 
@@ -169,6 +180,30 @@ public class Scanner {
         let strEnd = source.index(before: idx) 
         let litString = source[strStart...strEnd]
         addToken(TokenType.STRING(litString))
+    }
+
+
+    func isDigit(_ c: Character) -> Bool {
+        return c.isASCII && c.isNumber
+    }
+
+
+    func scanNumber() {
+        while isDigit(peek() ?? " ") {
+           let _ = advance()
+        }
+
+        // Skip past dot if it exists
+        if (peek() == ".") && isDigit(peekNext() ?? " ") {
+            let _ = advance()
+        }
+
+        while isDigit(peek() ?? " ") {
+           let _ = advance()
+        }
+
+        let numberLiteral = Float(source[startIdx...idx])!
+        addToken(.NUMBER(numberLiteral))
     }
 
 
@@ -230,9 +265,15 @@ public class Scanner {
             case "\"": try scanString()
 
             // Ignoring whilespace 
-            case "\r", "\n", " ": break 
+            case "\r", "\n", " ": return 
 
-            default: throw LoxError.ScannerError(line: line, pos: linePos, message: "Invalid character \(char)")
+            default: 
+                if isDigit(char) {
+                    scanNumber()
+                }
+                else {
+                    throw LoxError.ScannerError(line: line, pos: linePos, message: "Invalid character \(char)")
+                }
         }
     }
 

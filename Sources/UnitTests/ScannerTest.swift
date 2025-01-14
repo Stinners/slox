@@ -41,6 +41,16 @@ final class ScannerTest: XCTestCase {
         ])
     }
 
+    func testCanNumbers() throws {
+        let scanner = Scanner(source: "1 1.23")
+        let tokens = try scanner.scanTokens()
+        
+        checkTokens(tokens: tokens, are: [
+            (type: .NUMBER(1.0), lex: "1"),
+            (type: .NUMBER(1.23), lex: "1.23"),
+        ])
+    }
+
     func testCanScanDoubleCharacters() throws {
         let scanner = Scanner(source: "!= == /")
         let tokens = try scanner.scanTokens()
