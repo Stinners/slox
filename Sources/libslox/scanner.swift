@@ -76,7 +76,6 @@ public class Scanner {
     var idx: String.Index
     var startIdx: String.Index
     var endIdx: String.Index
-    var done = false
 
     public init(source input: String) {
         source = input
@@ -85,7 +84,6 @@ public class Scanner {
 
         // Handle empty strings
         if input.startIndex == input.endIndex {
-            done = true
             endIdx = startIdx
         } else {
             endIdx = source.index(before: input.endIndex)
@@ -106,11 +104,7 @@ public class Scanner {
 
     // We want it so that calling advance repeatedly will return every character 
     // in the string 
-    func advance() -> Bool? {
-        if done {
-            return false
-        }
-
+    func advance() -> Bool {
         if canReadMore() {
             idx = source.index(after: idx)
             linePos += 1 
@@ -118,11 +112,10 @@ public class Scanner {
                 line += 1
                 linePos = 0
             }
+            return true 
         } else {
-            done = true
+            return false
         }
-
-        return true
     }
 
     func peek() -> Character? {
@@ -163,16 +156,20 @@ public class Scanner {
         tokens.append(token)
     }
 
-    func scanUntil(a char: Character) {
+    func scanUntil(a char: Character, stopBefore: Bool) {
         while !foundChar(c: char) {
             let _ = advance() 
+        }
+
+        if !stopBefore {
+            let _ = advance()
         }
     }
 
     func scanString() throws {
-        scanUntil(a: "\"") 
+        scanUntil(a: "\"", stopBefore: false) 
         
-        if !canReadMore() {
+        if source[idx] != "\"" {
             throw LoxError.ScannerError(line: line, pos: linePos, message: "Unterminated string")
         }
         
@@ -256,7 +253,7 @@ public class Scanner {
             // Division and comments 
             case "/":
                 if match(with: "/") {
-                    scanUntil(a: "\n")
+                    scanUntil(a: "\n", stopBefore: false)
                 }
                 else {
                     addToken(TokenType.SLASH)
@@ -278,10 +275,11 @@ public class Scanner {
     }
 
     public func scanTokens() throws -> Array<Token> {
-        while !done {
-            startIdx = idx
-            try scanToken()
-            let _ = advance()
+        if source != "" {
+            repeat {
+                startIdx = idx
+                try scanToken()
+            } while advance()
         }
 
         tokens.append(Token(type: TokenType.EOF, lexeme: "", line: line))

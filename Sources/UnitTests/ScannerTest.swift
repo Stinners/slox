@@ -81,4 +81,14 @@ final class ScannerTest: XCTestCase {
             (type: .PLUS, lex: "+"),
         ])
     }
+
+    func testHandlesSimpleStrings() throws {
+        let scanner = Scanner(source: "\"foo\" \"bar 'baz\"")
+        let tokens = try scanner.scanTokens()
+        
+        checkTokens(tokens: tokens, are: [
+            (type: .STRING("foo"), lex: "\"foo\""),
+            (type: .STRING("bar 'baz"), lex: "\"bar 'baz\""),
+        ])
+    }
 }
