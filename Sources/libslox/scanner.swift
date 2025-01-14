@@ -1,7 +1,7 @@
 import Foundation
 
 
-public enum TokenType: Equatable {
+public enum TokenType: Equatable, Sendable {
   // Single-character tokens.
   case LEFT_PAREN
   case RIGHT_PAREN
@@ -60,6 +60,25 @@ public struct Token: CustomStringConvertible {
         return "[\(type) '\(lexeme)']"
     }
 }
+
+let keywords: [Substring: TokenType] = [
+    "and":    .AND,
+    "class":  .CLASS,
+    "else":   .ELSE,
+    "false":  .FALSE,
+    "for":    .FOR,
+    "fun":    .FUN,
+    "if":     .IF,
+    "nil":    .NIL,
+    "or":     .OR,
+    "print":  .PRINT,
+    "return": .RETURN,
+    "super":  .SUPER,
+    "this":   .THIS,
+    "true":   .TRUE,
+    "var":    .VAR,
+    "while":  .WHILE,
+]
 
 
 public class Scanner {
@@ -179,11 +198,18 @@ public class Scanner {
         addToken(TokenType.STRING(litString))
     }
 
-
+    
     func isDigit(_ c: Character) -> Bool {
         return c.isASCII && c.isNumber
     }
 
+    func isIdentifierStart(_ c: Character) -> Bool {
+        return c.isLetter || c == "_"
+    }
+
+    func isIdentifierInner(_ c: Character) -> Bool {
+        return isIdentifierStart(c) || isDigit(c)
+    }
 
     func scanNumber() {
         while isDigit(peek() ?? " ") {
@@ -201,6 +227,17 @@ public class Scanner {
 
         let numberLiteral = Float(source[startIdx...idx])!
         addToken(.NUMBER(numberLiteral))
+    }
+
+    func scanIdentifier() {
+        while isIdentifierInner(peek() ?? " ") {
+            let _ = advance()
+        }
+        //while isIdentifierInner(source[idx]) && advance() {}
+
+        let text = source[startIdx...idx]
+        let type = keywords[text] ?? .IDENTIFIER(text)
+        addToken(type)
     }
 
 
@@ -268,7 +305,11 @@ public class Scanner {
                 if isDigit(char) {
                     scanNumber()
                 }
+                else if isIdentifierStart(char) {
+                    scanIdentifier()
+                }
                 else {
+                    print(char)
                     throw LoxError.ScannerError(line: line, pos: linePos, message: "Invalid character \(char)")
                 }
         }

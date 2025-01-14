@@ -91,4 +91,40 @@ final class ScannerTest: XCTestCase {
             (type: .STRING("bar 'baz"), lex: "\"bar 'baz\""),
         ])
     }
+
+    func testHandlesIdentifiers() throws {
+        let scanner = Scanner(source: "foo _bar a12")
+        let tokens = try scanner.scanTokens()
+        
+        checkTokens(tokens: tokens, are: [
+            (type: .IDENTIFIER("foo"), lex: "foo"),
+            (type: .IDENTIFIER("_bar"), lex: "_bar"),
+            (type: .IDENTIFIER("a12"), lex: "a12"),
+        ])
+    }
+
+    func testHandlesKeywords() throws {
+        let scanner = Scanner(source: "and fun class")
+        let tokens = try scanner.scanTokens()
+        
+        checkTokens(tokens: tokens, are: [
+            (type: .AND, lex: "and"),
+            (type: .FUN, lex: "fun"),
+            (type: .CLASS, lex: "class"),
+        ])
+    }
+
+    func testHandlesSimpleExpression() throws {
+        let scanner = Scanner(source: "while count == 12 { // comment\n }")
+        let tokens = try scanner.scanTokens()
+        
+        checkTokens(tokens: tokens, are: [
+            (type: .WHILE, lex: "while"),
+            (type: .IDENTIFIER("count"), lex: "count"),
+            (type: .EQUAL_EQUAL, lex: "=="),
+            (type: .NUMBER(12.0), lex: "12"),
+            (type: .LEFT_BRACE, lex: "{"),
+            (type: .RIGHT_BRACE, lex: "}"),
+        ])
+    }
 }
