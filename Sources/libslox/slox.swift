@@ -8,31 +8,27 @@ public class Interpreter {
 
     public init() {}
 
-    func report(at line: Int, where: String, message: String) {
-        print("[line \(line)] Error \(`where`): \(message)")
+    func handleError(_ error: LoxError) {
+        print(error.report())
         hadError = true
     }
-
-
-    func error(at line: Int, about: String) {
-        report(at: line, where: "", message: about) 
-    }
-
 
     func run(program: String) {
         let scanner = Scanner(source: program)
         do {
             let tokens = try scanner.scanTokens()
+            let parser = Parser(tokens: tokens)
 
-            for token in tokens {
-                print(token)
+            if case let .some(ast) = parser.parse() {
+                print(ast.display())
             }
         }
-        catch let LoxError.ScannerError(line: line, pos: _, message: message) {
-            error(at: line, about: message)
+        catch let error as LoxError {
+            handleError(error)
         }
         catch {
             print("Unrecognized error \(error)")
+            hadError = true
         }
 
     }

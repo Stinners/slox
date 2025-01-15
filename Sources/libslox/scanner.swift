@@ -1,7 +1,7 @@
 import Foundation
 
 
-public enum TokenType: Equatable, Sendable {
+enum TokenType: Equatable, Sendable {
   // Single-character tokens.
   case LEFT_PAREN
   case RIGHT_PAREN
@@ -49,14 +49,26 @@ public enum TokenType: Equatable, Sendable {
   case WHILE
 
   case EOF
+
+  // We want a way to ignore the associated value in cases 
+  // where one exists
+  func sameType(as other: TokenType) -> Bool {
+      switch  (self, other) {
+          case (.IDENTIFIER, .IDENTIFIER): return true
+          case (.STRING, .STRING):         return true
+          case (.NUMBER, .NUMBER):         return true
+          default:                         return self == other
+      }
+  }
+
 }
 
-public struct Token: CustomStringConvertible {
-    public var type: TokenType
-    public var lexeme: Substring
-    public var line: Int
+struct Token: CustomStringConvertible {
+    var type: TokenType
+    var lexeme: Substring
+    var line: Int
     
-    public var description: String {
+    var description: String {
         return "[\(type) '\(lexeme)']"
     }
 }
@@ -81,7 +93,7 @@ let keywords: [Substring: TokenType] = [
 ]
 
 
-public class Scanner {
+class Scanner {
     var source: String
     var tokens: Array<Token> = []
 
@@ -96,7 +108,7 @@ public class Scanner {
     var startIdx: String.Index
     var endIdx: String.Index
 
-    public init(source input: String) {
+    init(source input: String) {
         source = input
         idx = input.startIndex
         startIdx = idx
@@ -315,7 +327,7 @@ public class Scanner {
         }
     }
 
-    public func scanTokens() throws -> Array<Token> {
+    func scanTokens() throws -> Array<Token> {
         if source != "" {
             repeat {
                 startIdx = idx

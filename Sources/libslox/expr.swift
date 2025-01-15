@@ -1,10 +1,10 @@
 
-public protocol Expr {
+protocol Expr {
     func display() -> String
 }
 
-public func parenthesize(name: CustomStringConvertible, exprs: Expr...) -> String {
-    var str = "("
+func parenthesize(name: CustomStringConvertible, exprs: Expr...) -> String {
+    var str = "(\(name)"
 
     for expr in exprs {
         str.append(" ")
@@ -16,31 +16,32 @@ public func parenthesize(name: CustomStringConvertible, exprs: Expr...) -> Strin
 }
 
 
-public struct Binary: Expr {
-    public let left: Expr
-    public let op: Token 
-    public let right: Expr
+struct Binary: Expr {
+    let left: Expr
+    let op: Token 
+    let right: Expr
 
-    public func display() -> String { parenthesize(name: op.lexeme, exprs: left, right) }
+    func display() -> String { parenthesize(name: op.lexeme, exprs: left, right) }
 }
 
-public struct Grouping: Expr {
-    public let expression: Expr
+struct Grouping: Expr {
+    let expression: Expr
 
-    public func display() -> String { parenthesize(name: "group", exprs: expression) }
+    func display() -> String { parenthesize(name: "group", exprs: expression) }
 }
 
 // TODO add constructor which checks that 
 // only valid literals can be included
-public struct Literal: Expr {
-    public let value: Token
+struct Literal: Expr {
+    let value: Token
 
-    public func display() -> String { String(value.lexeme) }
+    func display() -> String { String(value.lexeme) }
 }
 
-public struct Unary: Expr {
-    public let op: Token
-    public let right: Expr
+struct Unary: Expr {
+    let op: Token
+    let right: Expr
 
-    public func display() -> String { parenthesize(name: op.lexeme, exprs: right) }
+    func display() -> String { parenthesize(name: op.lexeme, exprs: right) }
 }
+

@@ -2,7 +2,7 @@
 import XCTest
 import Nimble
 
-import libslox
+@testable import libslox
 
 func checkToken(token actual: Token, hasType expected: TokenType) {
     expect(actual.type).to(equal(expected))
@@ -22,6 +22,7 @@ func checkTokens(tokens: Array<Token>, are expectedTokens: ExpectedTokens) {
 }
 
 final class ScannerTest: XCTestCase {
+
     func testCanHandleEmptyString() throws {
         let scanner = Scanner(source: "")
         let tokens = try scanner.scanTokens()

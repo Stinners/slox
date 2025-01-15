@@ -23,7 +23,7 @@ let package = Package(
         ),
         .testTarget(
             name: "UnitTests",
-            dependencies: ["libslox", "Nimble"]
+            dependencies: ["libslox", "Nimble", "slox"]
         )
     ]
 )
