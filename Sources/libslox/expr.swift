@@ -1,5 +1,6 @@
 import Foundation
 
+
 // We could use swift's 'Any' type here, but it's more
 // interetsing to do it ourselves
 enum Primitive: CustomStringConvertible, Equatable {

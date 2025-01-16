@@ -29,7 +29,7 @@ class Parser {
     // ==================== Helpers ========================
 
     func peek() -> Token {
-        return tokens[current + 1]
+        return tokens[current]
     }
 
     func isAtEnd() -> Bool {
