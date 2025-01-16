@@ -90,7 +90,7 @@ enum Primitive: CustomStringConvertible, Equatable {
         }
     }
     func not_equal(_ other: Primitive) -> Primitive {
-        return self.equal(other).not()
+        self.equal(other).not()
     }
 
     func less_than(_ other: Primitive) -> Primitive? {
@@ -104,7 +104,11 @@ enum Primitive: CustomStringConvertible, Equatable {
         self.less_than(other).map { $0.or(self.equal(other)) }
     }
     func greater_than(_ other: Primitive) -> Primitive? {
-        self.less_than(other).map { $0.not() }
+        switch (self, other) {
+            case let (.Number(a), .Number(b)): .Boolean(a>b)
+            case let (.String(a), .String(b)): .Boolean(a>b)
+            default: .none
+        }
     }
     func greater_than_equal_to(_ other: Primitive) -> Primitive? {
         self.greater_than(other).map { $0.or(self.equal(other)) }
@@ -192,6 +196,9 @@ struct Binary: Expr {
             case .LESS_EQUAL:    leftVal.less_than_equal_to(rightVal)
             case .GREATER:       leftVal.greater_than(rightVal)
             case .GREATER_EQUAL: leftVal.greater_than_equal_to(rightVal)
+
+            case .EQUAL_EQUAL: leftVal.equal(rightVal)
+            case .BANG_EQUAL:  leftVal.equal(rightVal).not()
 
             default: fatalError("Invalid binary operator")
         }
