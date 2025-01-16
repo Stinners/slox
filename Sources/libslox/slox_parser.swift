@@ -1,4 +1,4 @@
-// We can't call this file 'parser.swift' becuase that triggers some kind of special 
+// We can't call this file 'parser.swift' becuase that triggers some kind of special
 // logic in the compilation process
 
 import Foundation
@@ -51,7 +51,7 @@ class Parser {
         if (isAtEnd()) {
             return false
         }
-        return peek().type.sameType(as: otherToken) 
+        return peek().type.sameType(as: otherToken)
     }
 
     func match(oneOf options: TokenType...) -> Token? {
@@ -88,24 +88,24 @@ class Parser {
 
     // ==================== Rules ========================
 
-    // primary -> NUMBER | STRING | "true" | "false" | "nil" 
+    // primary -> NUMBER | STRING | "true" | "false" | "nil"
     //            | "(" expression ")"
     func primary() throws -> Expr {
-        if match(oneOf: .NUMBER(0), .STRING(""), .TRUE, .FALSE, .NIL) != nil { 
-            return Literal(value: previous()) 
+        if match(oneOf: .NUMBER(0), .STRING(""), .TRUE, .FALSE, .NIL) != nil {
+            return Literal(token: previous())
         }
 
         else if (match(oneOf: .LEFT_PAREN)) != nil {
-            // TODO get expression 
+            // TODO get expression
             let expr = try expression()
             let _ = try consume(type: .RIGHT_PAREN, message: "Expected ')' after expression")
             return Grouping(expression: expr)
         }
-        
+
         else {
             throw LoxError.ParserError(token: peek(), message: "Expected literal or open parentheses")
         }
-            
+
     }
 
     // unary -> ( "!" | "-" ) unary

@@ -5,6 +5,7 @@ import Foundation
 
 public class Interpreter {
     var hadError = false 
+    var hadRuntimeError = false
 
     public init() {}
 
@@ -24,6 +25,9 @@ public class Interpreter {
             }
         }
         catch let error as LoxError {
+            if case .RuntimeError = error {
+                hadRuntimeError = true
+            }
             handleError(error)
         }
         catch {
@@ -38,6 +42,9 @@ public class Interpreter {
         do {
             let contents = try String(contentsOfFile: path, encoding: String.Encoding.utf8)
             run(program: contents)
+
+            if hadError { exit(65) }
+            if hadRuntimeError { exit(70) }
         }
         catch {
             print("File '\(path)' cannot be read: \(error)")

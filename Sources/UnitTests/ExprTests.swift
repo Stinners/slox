@@ -14,15 +14,15 @@ final class ExprPrinterTest: XCTestCase {
         let expr = Binary(
             left: Unary(
                 op: token(type: .MINUS, lexeme:  "-"), 
-                right: Literal(value: token(type: .NUMBER(123.0), lexeme: "123"))
+                right: Literal(token: token(type: .NUMBER(123.0), lexeme: "123"))
             ),
             op: token(type: .STAR, lexeme: "*"),
             right: Grouping(
-                expression: Literal(value: token(type: .NUMBER(45.67), lexeme: "45.67"))
+                expression: Literal(token: token(type: .NUMBER(45.67), lexeme: "45.67"))
             )
         )
         let actual = expr.display()
-        let expected = "(* (- 123) (group 45.67))"
+        let expected = "(* (- 123.0) (group 45.67))"
 
         expect(actual).to(equal(expected))
             

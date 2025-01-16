@@ -1,6 +1,7 @@
 enum LoxError: Error {
     case ScannerError(line: Int, pos: Int, message: String)
     case ParserError(token: Token, message: String)
+    case RuntimeError(token: Token, message: String)
 
     func report() -> String {
         switch self {
@@ -12,6 +13,9 @@ enum LoxError: Error {
                     case .EOF: return "[line \(token.line), at end \(message)]"
                     default: return "[line \(token.line), at \(message)]"
                 }
+
+            case let .RuntimeError(token, message):
+                return "\(message)\n[line \(token.line)]"
         }
     }
 }

@@ -50,7 +50,7 @@ enum TokenType: Equatable, Sendable {
 
   case EOF
 
-  // We want a way to ignore the associated value in cases 
+  // We want a way to ignore the associated value in cases
   // where one exists
   func sameType(as other: TokenType) -> Bool {
       switch  (self, other) {
@@ -67,7 +67,7 @@ struct Token: CustomStringConvertible {
     var type: TokenType
     var lexeme: Substring
     var line: Int
-    
+
     var description: String {
         return "[\(type) '\(lexeme)']"
     }
@@ -98,11 +98,11 @@ class Scanner {
     var tokens: Array<Token> = []
 
     // These variables are used for error reporting
-    // and map to an intutive idea of a character 
-    var line: Int = 1 
+    // and map to an intutive idea of a character
+    var line: Int = 1
     var linePos: Int = 1
 
-    // These variables are used for indexing into the 
+    // These variables are used for indexing into the
     // source and map to actual byte offsets
     var idx: String.Index
     var startIdx: String.Index
@@ -128,22 +128,22 @@ class Scanner {
     func foundChar(c: Character) -> Bool {
         switch peek() {
             case .some(c): true
-            case .none: true 
+            case .none: true
             default: false
         }
     }
 
-    // We want it so that calling advance repeatedly will return every character 
-    // in the string 
+    // We want it so that calling advance repeatedly will return every character
+    // in the string
     func advance() -> Bool {
         if canReadMore() {
             idx = source.index(after: idx)
-            linePos += 1 
+            linePos += 1
             if source[idx] == "\n" {
                 line += 1
                 linePos = 0
             }
-            return true 
+            return true
         } else {
             return false
         }
@@ -158,8 +158,8 @@ class Scanner {
     }
 
     func peekNext() -> Character? {
-        if canReadMore() { 
-            let nextIdx = source.index(after: idx) 
+        if canReadMore() {
+            let nextIdx = source.index(after: idx)
             if nextIdx < endIdx {
                 return source[source.index(after: nextIdx)]
             }
@@ -179,7 +179,7 @@ class Scanner {
     }
 
 
-    // Scanning should end with the index on the last char 
+    // Scanning should end with the index on the last char
     // of the current token
     func addToken(_ type: TokenType) {
         let text = source[startIdx...idx]
@@ -189,7 +189,7 @@ class Scanner {
 
     func scanUntil(a char: Character, stopBefore: Bool) {
         while !foundChar(c: char) {
-            let _ = advance() 
+            let _ = advance()
         }
 
         if !stopBefore {
@@ -198,19 +198,19 @@ class Scanner {
     }
 
     func scanString() throws {
-        scanUntil(a: "\"", stopBefore: false) 
-        
+        scanUntil(a: "\"", stopBefore: false)
+
         if source[idx] != "\"" {
             throw LoxError.ScannerError(line: line, pos: linePos, message: "Unterminated string")
         }
-        
-        let strStart = source.index(after: startIdx) 
-        let strEnd = source.index(before: idx) 
+
+        let strStart = source.index(after: startIdx)
+        let strEnd = source.index(before: idx)
         let litString = source[strStart...strEnd]
         addToken(TokenType.STRING(litString))
     }
 
-    
+
     func isDigit(_ c: Character) -> Bool {
         return c.isASCII && c.isNumber
     }
@@ -257,8 +257,8 @@ class Scanner {
         let char = source[idx]
         switch char {
 
-            // Single charter tokens 
-            case "(": addToken(TokenType.LEFT_PAREN) 
+            // Single charter tokens
+            case "(": addToken(TokenType.LEFT_PAREN)
             case ")": addToken(TokenType.RIGHT_PAREN)
             case "{": addToken(TokenType.LEFT_BRACE)
             case "}": addToken(TokenType.RIGHT_BRACE)
@@ -269,20 +269,20 @@ class Scanner {
             case ";": addToken(TokenType.SEMICOLON)
             case "*": addToken(TokenType.STAR)
 
-            // Two character tokens 
-            case "!": 
+            // Two character tokens
+            case "!":
                 if match(with: "=") {
-                    addToken(TokenType.BANG_EQUAL) 
+                    addToken(TokenType.BANG_EQUAL)
                 }
                 else {
-                    addToken(TokenType.BANG) 
+                    addToken(TokenType.BANG)
                 }
             case "=":
                 if match(with: "=") {
-                    addToken(TokenType.EQUAL_EQUAL) 
-                } 
+                    addToken(TokenType.EQUAL_EQUAL)
+                }
                 else {
-                    addToken(TokenType.EQUAL) 
+                    addToken(TokenType.EQUAL)
                 }
             case "<":
                 if match(with: "=") {
@@ -299,7 +299,7 @@ class Scanner {
                     addToken(TokenType.GREATER)
                 }
 
-            // Division and comments 
+            // Division and comments
             case "/":
                 if match(with: "/") {
                     scanUntil(a: "\n", stopBefore: false)
@@ -310,10 +310,10 @@ class Scanner {
 
             case "\"": try scanString()
 
-            // Ignoring whilespace 
-            case "\r", "\n", " ": return 
+            // Ignoring whilespace
+            case "\r", "\n", " ": return
 
-            default: 
+            default:
                 if isDigit(char) {
                     scanNumber()
                 }
@@ -336,7 +336,7 @@ class Scanner {
         }
 
         tokens.append(Token(type: TokenType.EOF, lexeme: "", line: line))
-        
+
         return tokens
     }
 }
