@@ -63,8 +63,8 @@ enum Primitive: CustomStringConvertible, Equatable {
 
     // =========== Logical Operators ================= //
 
-    // TODO: make these special functions which take generic expressions
-    // (rather than SObjects) and only evalute them when needed
+    // These are here to simplify defining things like comparision operators 
+    // which operate on primitives
     func and(_ other: Primitive) -> Primitive {
         switch (self.truth(), other.truth()) {
             case (.Boolean(true), .Boolean(true)): .Boolean(true)
@@ -108,8 +108,31 @@ enum Primitive: CustomStringConvertible, Equatable {
     func greater_than_equal_to(_ other: Primitive) -> Primitive? {
         self.greater_than(other).map { $0.or(self.equal(other)) }
     }
-
 }
+
+// ================== Short circuiting logical operators ===============//
+
+func lazyAnd(left: Expr, right: Expr) throws -> Primitive {
+    let evalLeft = try left.evaluate()
+    if case .Boolean(false) = evalLeft.truth() {
+        return .Boolean(false)
+    }
+
+    let evalRight = try right.evaluate()
+    return evalRight.truth()
+}
+
+func lazyOr(left: Expr, right: Expr) throws -> Primitive {
+    let evalLeft = try left.evaluate()
+    if case .Boolean(true) = evalLeft.truth() {
+        return .Boolean(true)
+    }
+
+    let evalRight = try right.evaluate()
+    return evalRight.truth()
+}
+
+// ================== Expression Types ===============//
 
 protocol Expr {
     func display() -> String
@@ -146,33 +169,35 @@ struct Binary: Expr {
     func display() -> String { parenthesize(name: op.lexeme, exprs: left, right) }
 
     func evaluate() throws -> Primitive {
-        let leftObj = try left.evaluate()
-        let rightObj = try right.evaluate()
+        // Short circuiting operators
+        switch op.type {
+            case .AND: return try lazyAnd(left: left, right: right)
+            case .OR:  return try  lazyOr(left: left, right: right)
+            default:   break
+        }
+
+        let leftVal = try left.evaluate()
+        let rightVal = try right.evaluate()
 
         let result: Primitive? = switch op.type {
             // Arithmetic Operators
-            case .MINUS: leftObj.minus(rightObj)
-            case .PLUS:  leftObj.plus(rightObj)
-            case .SLASH: leftObj.divide(rightObj)
-            case .STAR:  leftObj.times(rightObj)
+            case .MINUS: leftVal.minus(rightVal)
+            case .PLUS:  leftVal.plus(rightVal)
+            case .SLASH: leftVal.divide(rightVal)
+            case .STAR:  leftVal.times(rightVal)
 
             // Comparison operators
-            case .LESS:          leftObj.less_than(rightObj)
-            case .LESS_EQUAL:    leftObj.less_than_equal_to(rightObj)
-            case .GREATER:       leftObj.greater_than(rightObj)
-            case .GREATER_EQUAL: leftObj.greater_than_equal_to(rightObj)
-
-            // Logical Operators
-            // TODO impliment short circuiting logical operators
-            case .AND: leftObj.and(rightObj)
-            case .OR: leftObj.or(rightObj)
+            case .LESS:          leftVal.less_than(rightVal)
+            case .LESS_EQUAL:    leftVal.less_than_equal_to(rightVal)
+            case .GREATER:       leftVal.greater_than(rightVal)
+            case .GREATER_EQUAL: leftVal.greater_than_equal_to(rightVal)
 
             default: fatalError("Invalid binary operator")
         }
         return try raiseRuntimeError(
             result: result,
             token: op,
-            message: "Operator \(op.lexeme) not valid for \(leftObj) and \(rightObj)"
+            message: "Operator \(op.lexeme) not valid for \(leftVal) and \(rightVal)"
         )
     }
 }

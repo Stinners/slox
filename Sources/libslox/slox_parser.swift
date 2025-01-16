@@ -105,7 +105,6 @@ class Parser {
         else {
             throw LoxError.ParserError(token: peek(), message: "Expected literal or open parentheses")
         }
-
     }
 
     // unary -> ( "!" | "-" ) unary
