@@ -263,6 +263,18 @@ struct Unary: Expr {
     }
 }
 
+struct Variable: Expr {
+    let name: Token 
+
+    func evaluate() throws -> Primitive {
+        .Nil
+    }
+
+    func display() -> String {
+        String(name.lexeme)
+    }
+}
+
 func interpret(expr: Expr) throws {
     do {
         let result = try expr.evaluate()

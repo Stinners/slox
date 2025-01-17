@@ -4,18 +4,38 @@ import Nimble
 
 @testable import libslox 
 
-func parse(_ source: String) throws -> String {
+func parseExpr(_ rawSource: String) throws -> Expr? {
+
+    var source = rawSource 
+    if !source.hasSuffix(";") {
+        source += ";"
+    }
+
     let tokens = try Scanner(source: source).scanTokens()
-    let ast = Parser(tokens: tokens).parse()
-    return ast!.display()
+    let statements = Parser(tokens: tokens).parse()
+
+    if statements == nil {
+        fail("Parser did not return an AST for \(source)")
+    } 
+    else if statements!.count != 1 {
+        fail("Parser did not return 1 expression for \(source)")
+    }
+    else if let expr = statements![0] as? libslox.Expression {
+        return expr.expression
+    }
+    else {
+        fail("Parser did not return an expression for \(source)")
+    }
+
+    return .none
 }
 
 func expectString(source: String, expected: String) throws {
-    let actual = try parse(source)
+    let actual = try parseExpr(source)?.display()
     expect(actual).to(equal(expected))
 }
 
-final class ParserTests: XCTestCase {
+final class ExpressionTests: XCTestCase {
 
     func testLiterals() throws {
         try expectString(source: "12", expected: "12.0")

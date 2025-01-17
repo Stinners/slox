@@ -20,8 +20,10 @@ public class Interpreter {
             let tokens = try scanner.scanTokens()
             let parser = Parser(tokens: tokens)
 
-            if case let .some(ast) = parser.parse() {
-                print(ast.display())
+            if case let .some(statemenets) = parser.parse() {
+                for statemenet in statemenets {
+                    try statemenet.evaluate()
+                }
             }
         }
         catch let error as LoxError {

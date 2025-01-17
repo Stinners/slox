@@ -5,9 +5,8 @@ import Nimble
 @testable import libslox
 
 func expectResult(source: String, expected: Primitive) throws {
-    let tokens = try Scanner(source: source).scanTokens()
-    let ast = Parser(tokens: tokens).parse()!
-    let result = try ast.evaluate()
+    let expression = try parseExpr(source)
+    let result = try expression?.evaluate()
     expect(result).to(equal(expected))
 }
 

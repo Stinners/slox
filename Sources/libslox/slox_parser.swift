@@ -11,9 +11,14 @@ class Parser {
         self.tokens = tokens
     }
 
-    func parse() -> Expr? {
+    func parse() -> Array<Stmt>? {
+        var statements: Array<Stmt> = []
         do {
-            return try expression()
+            while !isAtEnd() {
+                let statement = try statementStmt()
+                statements.append(statement)
+            }
+            return statements
         }
         catch let error as LoxError {
             print(error.report())
@@ -169,5 +174,25 @@ class Parser {
 
     func expression() throws -> Expr {
         return try equality()
+    }
+
+    func statementStmt() throws -> Stmt {
+        if match(oneOf: .PRINT) != nil {
+            return try printStmt()
+        }
+
+        return try expressionStmt()
+    }
+
+    func printStmt() throws -> Stmt {
+        let value = try expression()
+        let _ = try consume(type: .SEMICOLON, message: "Expect ';' after value")
+        return Print(expression: value)
+    }
+
+    func expressionStmt() throws -> Stmt {
+        let value = try expression()
+        let _ = try consume(type: .SEMICOLON, message: "Expect ';' after expression")
+        return Expression(expression: value)
     }
 }
