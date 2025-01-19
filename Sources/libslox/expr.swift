@@ -1,5 +1,12 @@
 import Foundation
 
+class Context {
+    var environment: Environment
+
+    init() {
+        environment = Environment() 
+    }
+}
 
 // We could use swift's 'Any' type here, but it's more
 // interetsing to do it ourselves
@@ -117,23 +124,23 @@ enum Primitive: CustomStringConvertible, Equatable {
 
 // ================== Short circuiting logical operators ===============//
 
-func lazyAnd(left: Expr, right: Expr) throws -> Primitive {
-    let evalLeft = try left.evaluate()
+func lazyAnd(left: Expr, right: Expr, _ context: Context) throws -> Primitive {
+    let evalLeft = try left.evaluate(context)
     if case .Boolean(false) = evalLeft.truth() {
         return .Boolean(false)
     }
 
-    let evalRight = try right.evaluate()
+    let evalRight = try right.evaluate(context)
     return evalRight.truth()
 }
 
-func lazyOr(left: Expr, right: Expr) throws -> Primitive {
-    let evalLeft = try left.evaluate()
+func lazyOr(left: Expr, right: Expr, _ context: Context) throws -> Primitive {
+    let evalLeft = try left.evaluate(context)
     if case .Boolean(true) = evalLeft.truth() {
         return .Boolean(true)
     }
 
-    let evalRight = try right.evaluate()
+    let evalRight = try right.evaluate(context)
     return evalRight.truth()
 }
 
@@ -141,7 +148,7 @@ func lazyOr(left: Expr, right: Expr) throws -> Primitive {
 
 protocol Expr {
     func display() -> String
-    func evaluate() throws -> Primitive
+    func evaluate(_ context: Context) throws -> Primitive
 }
 
 func parenthesize(name: CustomStringConvertible, exprs: Expr...) -> String {
@@ -173,16 +180,16 @@ struct Binary: Expr {
 
     func display() -> String { parenthesize(name: op.lexeme, exprs: left, right) }
 
-    func evaluate() throws -> Primitive {
+    func evaluate(_ context: Context) throws -> Primitive {
         // Short circuiting operators
         switch op.type {
-            case .AND: return try lazyAnd(left: left, right: right)
-            case .OR:  return try  lazyOr(left: left, right: right)
+            case .AND: return try lazyAnd(left: left, right: right, context)
+            case .OR:  return try  lazyOr(left: left, right: right, context)
             default:   break
         }
 
-        let leftVal = try left.evaluate()
-        let rightVal = try right.evaluate()
+        let leftVal = try left.evaluate(context)
+        let rightVal = try right.evaluate(context)
 
         let result: Primitive? = switch op.type {
             // Arithmetic Operators
@@ -215,8 +222,8 @@ struct Grouping: Expr {
 
     func display() -> String { parenthesize(name: "group", exprs: expression) }
 
-    func evaluate() throws -> Primitive {
-        return try expression.evaluate()
+    func evaluate(_ context: Context) throws -> Primitive {
+        return try expression.evaluate(context)
     }
 }
 
@@ -236,7 +243,7 @@ struct Literal: Expr {
 
     func display() -> String { value.description }
 
-    func evaluate() throws -> Primitive {
+    func evaluate(_ context: Context) throws -> Primitive {
         return value
     }
 }
@@ -247,8 +254,8 @@ struct Unary: Expr {
 
     func display() -> String { parenthesize(name: op.lexeme, exprs: right) }
 
-    func evaluate() throws -> Primitive {
-        let rightObj = try right.evaluate()
+    func evaluate(_ context: Context) throws -> Primitive {
+        let rightObj = try right.evaluate(context)
 
         let result = switch op.type {
             case .MINUS: Primitive.Number(0).minus(rightObj)
@@ -266,8 +273,8 @@ struct Unary: Expr {
 struct Variable: Expr {
     let name: Token 
 
-    func evaluate() throws -> Primitive {
-        .Nil
+    func evaluate(_ context: Context) throws -> Primitive {
+        return try context.environment.get(name)
     }
 
     func display() -> String {
@@ -275,9 +282,23 @@ struct Variable: Expr {
     }
 }
 
+struct Assign: Expr {
+    let name: Token 
+    let value: Expr
+
+    func evaluate(_ context: Context) throws -> Primitive {
+        let result = try value.evaluate(context)
+        try context.environment.assign(name, toBe: result)
+        return result
+    }
+
+    func display() -> String { "(= \(name.lexeme) \(value.display())" }
+}
+
 func interpret(expr: Expr) throws {
+    let context = Context()
     do {
-        let result = try expr.evaluate()
+        let result = try expr.evaluate(context)
         print(result)
     }
     catch {

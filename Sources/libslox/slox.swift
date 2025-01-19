@@ -20,9 +20,10 @@ public class Interpreter {
             let tokens = try scanner.scanTokens()
             let parser = Parser(tokens: tokens)
 
+            let context = Context()
             if case let .some(statemenets) = parser.parse() {
                 for statemenet in statemenets {
-                    try statemenet.evaluate()
+                    try statemenet.evaluate(context)
                 }
             }
         }

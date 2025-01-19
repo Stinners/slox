@@ -194,6 +194,8 @@ class Parser {
         return Print(expression: value)
     }
 
+    // This parses declrations e.g. var a = "foo",
+    // but not assignment e.g. a = "foo"
     func varDeclarationStmt() throws -> Stmt {
         let ident = try consume(type: .IDENTIFIER("_"), message: "Expected Identifier")
 
