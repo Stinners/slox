@@ -23,7 +23,7 @@ struct Expression: Stmt {
 
 struct Var: Stmt {
     let name: Token 
-    let initializer: Expr
+    let initializer: Expr?
 
     func evaluate() throws {}
 }

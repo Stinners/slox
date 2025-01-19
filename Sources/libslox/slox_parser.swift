@@ -100,7 +100,11 @@ class Parser {
             return Literal(token: previous())
         }
 
-        else if (match(oneOf: .LEFT_PAREN)) != nil {
+        else if match(oneOf: .IDENTIFIER("_")) != nil {
+            return Variable(name: previous())
+        }
+
+        else if match(oneOf: .LEFT_PAREN) != nil {
             // TODO get expression
             let expr = try expression()
             let _ = try consume(type: .RIGHT_PAREN, message: "Expected ')' after expression")
@@ -190,9 +194,24 @@ class Parser {
         return Print(expression: value)
     }
 
+    func varDeclarationStmt() throws -> Stmt {
+        let ident = try consume(type: .IDENTIFIER("_"), message: "Expected Identifier")
+
+        let initializer: Expr? = if (match(oneOf: .EQUAL) != nil) {
+            try expression()
+        } else {
+            Optional.none
+        };
+
+        let _ = try consume(type: .SEMICOLON, message: "Expect ';' after variable declaration.")
+
+        return Var(name: ident, initializer: initializer)
+    }
+
     func expressionStmt() throws -> Stmt {
         let value = try expression()
         let _ = try consume(type: .SEMICOLON, message: "Expect ';' after expression")
         return Expression(expression: value)
     }
+
 }
