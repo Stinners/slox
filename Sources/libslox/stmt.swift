@@ -30,3 +30,15 @@ struct Var: Stmt {
         context.environment.define(String(name.lexeme), toBe: value)
     }
 }
+
+struct Block: Stmt {
+    let statements: Array<Stmt>
+
+    func evaluate(_ context: Context) throws {
+        let innerContext = context.inner()
+
+        for stmt in statements {
+            try stmt.evaluate(innerContext)
+        }
+    }
+}

@@ -184,6 +184,9 @@ class Parser {
         if match(oneOf: .PRINT) != nil {
             return try printStmt()
         }
+        else if match(oneOf: .LEFT_BRACE) != nil {
+            return Block(statements: try blockStmt())
+        }
 
         return try expressionStmt()
     }
@@ -214,6 +217,17 @@ class Parser {
         let value = try expression()
         let _ = try consume(type: .SEMICOLON, message: "Expect ';' after expression")
         return Expression(expression: value)
+    }
+
+    func blockStmt() throws -> Array<Stmt> {
+        var statements: Array<Stmt> = []
+
+        while !check(type: .RIGHT_BRACE) && !isAtEnd() {
+            statements.append(try varDeclarationStmt())
+        }
+
+        let _ = try consume(type: .RIGHT_BRACE, message: "Expected closing brace '}' after block")
+        return statements
     }
 
 }

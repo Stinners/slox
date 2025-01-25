@@ -3,8 +3,13 @@ import Foundation
 class Context {
     var environment: Environment
 
-    init() {
-        environment = Environment() 
+    init(_ environment: Environment? = nil) {
+        self.environment = environment ?? Environment()
+    }
+
+    func inner() -> Context {
+        let innerEnv = Environment(parent: self.environment)
+        return Context(innerEnv)
     }
 }
 
