@@ -67,6 +67,10 @@ enum Primitive: CustomStringConvertible, Equatable {
         }
     }
 
+    func truthy() -> Bool {
+        self.truth() == .Boolean(true)
+    }
+
     func not() -> Primitive {
         return switch self {
             case .Nil, .Boolean(false): .Boolean(true)
@@ -193,6 +197,7 @@ struct Binary: Expr {
             default:   break
         }
 
+        // Else we need to evaluate both sides
         let leftVal = try left.evaluate(context)
         let rightVal = try right.evaluate(context)
 
@@ -311,3 +316,4 @@ func interpret(expr: Expr) throws {
         abort()
     }
 }
+

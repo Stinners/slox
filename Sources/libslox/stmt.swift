@@ -42,3 +42,18 @@ struct Block: Stmt {
         }
     }
 }
+
+struct If: Stmt {
+    let condition: Expr
+    let thenBranch: Stmt 
+    let elseBranch: Stmt?
+
+    func evaluate(_ context: Context) throws {
+        if try condition.evaluate(context).truthy() {
+            try thenBranch.evaluate(context)
+        }
+        else if elseBranch != nil {
+            try elseBranch!.evaluate(context)
+        }
+    }
+}

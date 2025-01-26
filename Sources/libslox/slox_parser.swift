@@ -199,7 +199,7 @@ class Parser {
 
     // This parses declrations e.g. var a = "foo",
     // but not assignment e.g. a = "foo"
-    func varDeclarationStmt() throws -> Stmt {
+    func varDeclarationStmt() throws -> Var {
         let ident = try consume(type: .IDENTIFIER("_"), message: "Expected Identifier")
 
         let initializer: Expr? = if (match(oneOf: .EQUAL) != nil) {
@@ -213,7 +213,7 @@ class Parser {
         return Var(name: ident, initializer: initializer)
     }
 
-    func expressionStmt() throws -> Stmt {
+    func expressionStmt() throws -> Expression {
         let value = try expression()
         let _ = try consume(type: .SEMICOLON, message: "Expect ';' after expression")
         return Expression(expression: value)
@@ -228,6 +228,23 @@ class Parser {
 
         let _ = try consume(type: .RIGHT_BRACE, message: "Expected closing brace '}' after block")
         return statements
+    }
+
+    func ifStmt() throws -> If {
+        let _ = try consume(type: .LEFT_PAREN, message: "Expect '(' after 'if'.")
+        let condition = try expression()
+        let _ = try consume(type: .RIGHT_PAREN, message: "Expect ')' after condition")
+
+        let thenBranch = try statementStmt() 
+
+        let elseBranch: Stmt? = if match(oneOf: .ELSE) != nil {
+            try statementStmt()
+        } 
+        else {
+            Optional.none 
+        }
+
+        return  If(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
     }
 
 }
