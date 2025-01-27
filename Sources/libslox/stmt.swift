@@ -49,11 +49,23 @@ struct If: Stmt {
     let elseBranch: Stmt?
 
     func evaluate(_ context: Context) throws {
-        if try condition.evaluate(context).truthy() {
+        if try condition.evaluate(context).isTruthy() {
             try thenBranch.evaluate(context)
         }
         else if elseBranch != nil {
             try elseBranch!.evaluate(context)
+        }
+    }
+}
+
+struct While: Stmt {
+    let condition: Expr
+    let body: Stmt
+
+    func evaluate(_ context: Context) throws {
+        let innerContext = context.inner()
+        while try condition.evaluate(innerContext).isTruthy() { 
+            try body.evaluate(innerContext)
         }
     }
 }

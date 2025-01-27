@@ -67,7 +67,7 @@ enum Primitive: CustomStringConvertible, Equatable {
         }
     }
 
-    func truthy() -> Bool {
+    func isTruthy() -> Bool {
         self.truth() == .Boolean(true)
     }
 
@@ -239,6 +239,10 @@ struct Grouping: Expr {
 
 struct Literal: Expr {
     let value: Primitive
+
+    init(value: Primitive) {
+        self.value = value
+    }
 
     init(token: Token) {
         value = switch token.type {

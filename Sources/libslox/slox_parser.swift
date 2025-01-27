@@ -182,13 +182,20 @@ class Parser {
 
     func statementStmt() throws -> Stmt {
         if match(oneOf: .PRINT) != nil {
-            return try printStmt()
+            try printStmt()
         }
         else if match(oneOf: .LEFT_BRACE) != nil {
-            return Block(statements: try blockStmt())
+            Block(statements: try blockStmt())
         }
-
-        return try expressionStmt()
+        else if match(oneOf: .WHILE) != nil {
+            try whileStmt()
+        }
+        else if match(oneOf: .FOR) != nil {
+            try forStmt()
+        }
+        else {
+            try expressionStmt()
+        }
     }
 
     func printStmt() throws -> Stmt {
@@ -245,6 +252,73 @@ class Parser {
         }
 
         return  If(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
+    }
+
+    func whileStmt() throws -> While {
+        let _ = try consume(type: .LEFT_PAREN, message: "Expect '(' after 'while'")
+        let condition = try expression()
+        let _ = try consume(type: .RIGHT_PAREN, message: "Expect ')' after loop condition")
+        let body = try statementStmt()
+
+        return While(condition: condition, body: body)
+    }
+
+    // The for syntax actually desugars to a while loop 
+    func forStmt() throws -> Stmt {
+        let _ = try consume(type: .LEFT_PAREN, message: "Expect '(' after 'for'")
+
+        let initializer: Stmt? = 
+            if match(oneOf: .SEMICOLON) != nil {
+                Optional.none
+            }
+            else if match(oneOf: .VAR) != nil {
+                try varDeclarationStmt()
+            }
+            else {
+                try expressionStmt()
+            }
+
+        // If there's no contion then we just set it to a literal 'true'
+        // to make an infinite loop
+        let condition: Expr = 
+            if !check(type: .SEMICOLON) {
+                try expression()
+            } 
+            else {
+                Literal(value: .Boolean(true))
+            }
+
+        let increment: Expr? = 
+            if !check(type: .RIGHT_PAREN) {
+                try expression()
+            }
+            else {
+                Optional.none
+            }
+
+        var body = try statementStmt()
+
+        // If there's an increment expression then we want to run it each 
+        // loop after the body
+        if let increment {
+            body = Block(statements: [
+                body, 
+                Expression(expression: increment)
+            ])
+        }
+
+        var whileLoop: Stmt = While(condition: condition, body: body)
+
+        // If there's an initializer, then run it once before the 
+        // while loop
+        if let initializer {
+            whileLoop = Block(statements: [
+                initializer,
+                whileLoop,
+            ])
+        }
+
+        return whileLoop
     }
 
 }
