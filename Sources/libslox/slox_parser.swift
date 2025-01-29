@@ -116,6 +116,41 @@ class Parser {
         }
     }
 
+    func finishCall(callee: Expr) throws -> Expr {
+        var arguments: Array<Expr> = []
+
+        if !check(type: .RIGHT_PAREN) {
+            repeat {
+                if arguments.count >= 255 {
+                    throw LoxError.ParserError(
+                        token: peek(), 
+                        message: "Can't have more than 255 arguments")
+                }
+                arguments.append(try expression())
+            } while (match(oneOf: .COMMA) != nil)
+        }
+
+        let paren = try consume(type: .RIGHT_PAREN, message: "Expect ')' after arguments")
+
+        return Call(callee: callee, paren: paren, arguments: arguments)
+    }
+
+    func call() throws -> Expr {
+        var expr = try primary()
+
+        while true {
+            if match(oneOf: .LEFT_PAREN) != nil {
+                // We need this to parse higher order function expressions like func()()
+                expr = try finishCall(callee: expr)
+            }
+            else {
+                break
+            }
+        }
+
+        return expr
+    }
+
     // unary -> ( "!" | "-" ) unary
     func unary() throws -> Expr {
         if let op = match(oneOf: .BANG, .MINUS) {
@@ -123,7 +158,7 @@ class Parser {
             return Unary(op: op, right: right)
         }
         else {
-            return try primary()
+            return try call()
         }
     }
 

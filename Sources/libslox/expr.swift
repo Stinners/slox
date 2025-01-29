@@ -160,7 +160,7 @@ protocol Expr {
     func evaluate(_ context: Context) throws -> Primitive
 }
 
-func parenthesize(name: CustomStringConvertible, exprs: Expr...) -> String {
+func parenthesize(name: CustomStringConvertible, exprs: Array<Expr>) -> String {
     var str = "(\(name)"
 
     for expr in exprs {
@@ -170,6 +170,10 @@ func parenthesize(name: CustomStringConvertible, exprs: Expr...) -> String {
     str.append(")")
 
     return str
+}
+
+func parenthesize(name: CustomStringConvertible, exprs: Expr...) -> String {
+    return parenthesize(name: name, exprs: exprs)
 }
 
 
@@ -307,6 +311,24 @@ struct Assign: Expr {
     }
 
     func display() -> String { "(= \(name.lexeme) \(value.display())" }
+}
+
+struct Call: Expr {
+    let callee: Expr 
+    let paren: Token 
+    let arguments: Array<Expr> 
+
+    func evaluate(_ context: Context) throws -> Primitive {
+        let evaledCallee = try callee.evaluate(context)
+        let evaledArgs = try arguments.map({ arg in try arg.evaluate(context) })
+
+        let function = try makeCallable(evaledCallee)
+        return try function.call(context, arguments: evaledArgs)
+    }
+
+    func display() -> String {
+        parenthesize(name: callee.display(), exprs: arguments)
+    }
 }
 
 func interpret(expr: Expr) throws {
