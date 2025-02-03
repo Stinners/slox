@@ -69,3 +69,15 @@ struct While: Stmt {
         }
     }
 }
+
+struct Function: Stmt {
+    let name: Token 
+    let params: Array<Token> 
+    let body: Array<Stmt>
+
+
+    func evaluate(_ context: Context) throws {
+        let function = LoxFunction(declaration: self)
+        context.define(String(name.lexeme), toBe: .Function(function))
+    }
+}

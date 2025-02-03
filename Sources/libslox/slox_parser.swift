@@ -228,6 +228,9 @@ class Parser {
         else if match(oneOf: .FOR) != nil {
             try forStmt()
         }
+        else if match(oneOf: .FUN) != nil {
+            try functionStmt(kind: "function")
+        }
         else {
             try expressionStmt()
         }
@@ -354,6 +357,30 @@ class Parser {
         }
 
         return whileLoop
+    }
+
+    func functionStmt(kind: String) throws -> Function {
+        let name = try consume(type: .IDENTIFIER(""), message: "Expect \(kind) name")
+        let _ = try consume(type: .LEFT_PAREN, message: "Expect ( after \(kind) name")
+
+        var parameters: Array<Token> = []
+
+        if !check(type: .RIGHT_PAREN) {
+            repeat {
+                if parameters.count >= 255 {
+                    throw runtimeError(message: "Cannot have more the 255 parameters")
+                }
+                else {
+                    parameters.append(try consume(type: .IDENTIFIER(""), message: "Expected parameter name"))
+                }
+            } while match(oneOf: .COMMA) != nil
+        }
+        let _ = try consume(type: .LEFT_PAREN, message: "Expect ) after parameters")
+
+        let _ = try consume(type: .LEFT_BRACE, message: "Expect { before \(kind) body")
+        let body = try blockStmt()
+
+        return  Function(name: name, params: parameters, body: body)
     }
 
 }

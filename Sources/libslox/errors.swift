@@ -20,4 +20,7 @@ enum LoxError: Error {
     }
 }
 
+func runtimeError(message: String) -> LoxError {
+    LoxError.RuntimeError(token: Token(type: .NIL, lexeme: "", line: 0), message: message)
+}
 

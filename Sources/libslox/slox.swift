@@ -3,6 +3,11 @@
 
 import Foundation
 
+func initGlobals(context: Context) {
+
+    context.environment.define("clock", toBe: .Function(Clock()))
+}
+
 public class Interpreter {
     var hadError = false 
     var hadRuntimeError = false
@@ -21,6 +26,7 @@ public class Interpreter {
             let parser = Parser(tokens: tokens)
 
             let context = Context()
+            initGlobals(context: context)
             if case let .some(statemenets) = parser.parse() {
                 for statemenet in statemenets {
                     try statemenet.evaluate(context)

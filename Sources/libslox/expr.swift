@@ -11,22 +11,28 @@ class Context {
         let innerEnv = Environment(parent: self.environment)
         return Context(innerEnv)
     }
+
+    func define(_ name: String, toBe newValue: Primitive) {
+        self.environment.define(name, toBe: newValue)
+    }
 }
 
 // We could use swift's 'Any' type here, but it's more
 // interetsing to do it ourselves
-enum Primitive: CustomStringConvertible, Equatable {
+enum Primitive: CustomStringConvertible {
     case String(String)
     case Number(Float)
     case Boolean(Bool)
     case Nil
+    case Function(any LoxCallable)
 
     var description: String {
         return switch self {
-            case let .String(str):   str
-            case let .Number(num):   num.description
-            case let .Boolean(bool): bool.description
-            case     .Nil:           "nil"
+            case let .String(str):         str
+            case let .Number(num):         num.description
+            case let .Boolean(bool):       bool.description
+            case     .Nil:                "nil"
+            case let .Function(callable):  callable.print()    
         }
     }
 
@@ -68,7 +74,10 @@ enum Primitive: CustomStringConvertible, Equatable {
     }
 
     func isTruthy() -> Bool {
-        self.truth() == .Boolean(true)
+        switch self.truth() {
+            case .Boolean(true): return true
+            default:            return false
+        }
     }
 
     func not() -> Primitive {
@@ -99,11 +108,15 @@ enum Primitive: CustomStringConvertible, Equatable {
     // =========== Comparison Operators ================= //
 
     func equal(_ other: Primitive) -> Primitive {
-        if self == other {
-            return .Boolean(true)
-        } else {
-            return .Boolean(false)
+        switch (self, other) {
+            case let (.String(left), .String(right)):     return .Boolean(left == right)
+            case let (.Number(left), .Number(right)):     return .Boolean(left == right)
+            case let (.Boolean(left), .Boolean(right)):   return .Boolean(left == right)
+            case (.Nil, .Nil):                            return .Boolean(true)
+            case let (.Function(left), .Function(right)): return .Boolean(ObjectIdentifier(left as AnyObject) == ObjectIdentifier(right as AnyObject))
+            default:                                      return .Boolean(false)
         }
+
     }
     func not_equal(_ other: Primitive) -> Primitive {
         self.equal(other).not()
@@ -323,6 +336,12 @@ struct Call: Expr {
         let evaledArgs = try arguments.map({ arg in try arg.evaluate(context) })
 
         let function = try makeCallable(evaledCallee)
+        if !(function.arity() == arguments.count) {
+            throw LoxError.RuntimeError(
+                    token: Token(type: .NIL, lexeme: "", line: 0),
+                    message: "Expected \(function.arity()) arguments, but got \(arguments.count)"
+            )
+        }
         return try function.call(context, arguments: evaledArgs)
     }
 
