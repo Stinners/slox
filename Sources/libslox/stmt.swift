@@ -81,3 +81,14 @@ struct Function: Stmt {
         context.define(String(name.lexeme), toBe: .Function(function))
     }
 }
+
+struct Return: Stmt {
+    let keyword: Token 
+    let value: Expr 
+
+    func evaluate(_ context: Context) throws {
+        let returnVal = try value.evaluate(context)
+        context.environment.setReturn(to: returnVal)
+        throw LoxError.DoReturn
+    }
+}

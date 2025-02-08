@@ -31,7 +31,15 @@ struct LoxFunction: LoxCallable {
             inner.define(String(param.lexeme), toBe: arg)
         }
 
-        try Block(statements: declaration.body).evaluate(inner)
+        do {
+            try Block(statements: declaration.body).evaluate(inner)
+        }
+        catch LoxError.DoReturn {
+            let returnVal = inner.environment.returnVal
+            inner.environment.setReturn(to: .Nil)
+            return returnVal
+        }
+
 
         return .Nil
     }

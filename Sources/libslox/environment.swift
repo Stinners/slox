@@ -2,10 +2,12 @@
 class Environment {
     let parent: Environment?
     var values: Dictionary<String, Primitive>;
+    var returnVal: Primitive
 
     init(parent: Environment? = nil) {
         values = [:]
         self.parent = parent
+        returnVal = .Nil
     } 
 
     func define(_ name: String, toBe newValue: Primitive) {
@@ -44,6 +46,13 @@ class Environment {
         }
         else {
             throw LoxError.RuntimeError(token: name, message: "Undefined variable '" + name.lexeme + "'.")
+        }
+    }
+
+    func setReturn(to value: Primitive) {
+        returnVal = value
+        if let parent {
+            parent.setReturn(to: value)
         }
     }
 }

@@ -2,6 +2,7 @@ enum LoxError: Error {
     case ScannerError(line: Int, pos: Int, message: String)
     case ParserError(token: Token, message: String)
     case RuntimeError(token: Token, message: String)
+    case DoReturn
 
     func report() -> String {
         switch self {
@@ -16,6 +17,9 @@ enum LoxError: Error {
 
             case let .RuntimeError(token, message):
                 return "\(message)\n[line \(token.line)]"
+
+            case .DoReturn:
+                return "Return Statement - this should never reach the top level"
         }
     }
 }

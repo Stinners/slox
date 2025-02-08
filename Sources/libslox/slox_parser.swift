@@ -231,6 +231,9 @@ class Parser {
         else if match(oneOf: .FUN) != nil {
             try functionStmt(kind: "function")
         }
+        else if match(oneOf: .RETURN) != nil {
+            try returnStmt()
+        }
         else {
             try expressionStmt()
         }
@@ -381,6 +384,21 @@ class Parser {
         let body = try blockStmt()
 
         return  Function(name: name, params: parameters, body: body)
+    }
+
+    func returnStmt() throws -> Return {
+        let keyword = previous()
+
+        let value = if !check(type: .SEMICOLON) {
+            try expression()
+        }
+        else {
+            Literal(value: .Nil)
+        }
+
+        let _ = try consume(type: .SEMICOLON, message: "Expected ; after return")
+
+        return Return(keyword: keyword, value: value)
     }
 
 }
